@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#115de1" />
+  <meta name="description" content="BrawlStats — a colorful Brawl Stars fan analytics dashboard." />
+  <title>BrawlStats • Player Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <div class="background-orbs" aria-hidden="true"></div>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="#overview" aria-label="BrawlStats home"><img class="brand-icon" src="/brawlstats-icon.png" alt="" aria-hidden="true"><span>BRAWL<span class="yellow-text">STATS</span></span></a>
+      <nav class="tabs" aria-label="Main navigation">
+        <a class="tab active" data-page="overview" href="#overview">⌂ <span>Overview</span></a>
+        <a class="tab" data-page="brawlers" href="#brawlers">★ <span>Brawlers</span></a>
+        <a class="tab" data-page="battles" href="#battles">⚔ <span>Battles</span></a>
+        <a class="tab" data-page="insights" href="#insights">▥ <span>Insights</span></a>
+      </nav>
+      <button id="open-search" class="nav-search" type="button">⌕ <span>Change player</span></button>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="search-screen" id="search-screen">
+      <div class="search-hero">
+        <div class="sparkle sparkle-one">✦</div><div class="sparkle sparkle-two">✷</div>
+        <div class="hero-emblem">★</div>
+        <p class="eyebrow light">YOUR PERSONAL BRAWL STARS DASHBOARD</p>
+        <h1>KNOW YOUR <span>GAME.</span></h1>
+        <p class="hero-sub">Your trophies, your Brawlers, your battles. All in one place.</p>
+        <form id="player-form" class="player-form"><label for="tag-input" class="sr-only">Player tag</label><span class="tag-hash">#</span><input id="tag-input" autocomplete="off" spellcheck="false" placeholder="ENTER PLAYER TAG" maxlength="16" required><button type="submit" id="find-button" class="button yellow-button">LET'S BRAWL →</button></form>
+        <p class="search-tip">Find your player tag in your Brawl Stars profile.</p>
+        <p class="error-message" id="search-error" role="alert" aria-live="polite"></p>
+      </div>
+      <div class="welcome-features"><div><b>🏆</b><strong>Trophy Tracking</strong><span>Keep an eye on your progress</span></div><div><b>⚡</b><strong>Brawler Collection</strong><span>Explore your strongest picks</span></div><div><b>📊</b><strong>Battle Insights</strong><span>See what works for you</span></div></div>
+    </section>
+
+    <div id="site-content" hidden>
+      <section class="player-banner" aria-label="Player profile">
+        <div class="player-portrait"><img id="profile-icon" alt="Player profile icon" hidden><span id="profile-fallback">★</span></div>
+        <div class="player-detail"><div class="mini-label">PLAYER PROFILE</div><h2 id="player-name">Player</h2><div class="profile-meta"><span id="player-tag">#TAG</span><span class="meta-divider">•</span><span class="club-label">CLUB:</span> <strong id="player-club">No club</strong></div></div>
+        <div class="banner-actions"><span id="updated-label">LAST UPDATED JUST NOW</span><button id="refresh-button" class="button navy-button" type="button">↻ REFRESH</button></div>
+      </section>
+      <div class="notice" id="site-notice" role="status" aria-live="polite" hidden></div>
+
+      <section class="page active" id="page-overview" aria-labelledby="overview-title">
+        <div class="page-heading"><div><p class="eyebrow">THE BIG PICTURE</p><h1 id="overview-title">PLAYER <span>OVERVIEW</span></h1><p class="page-subtitle">Your Brawl Stars journey at a glance.</p></div><span class="pill">⭐ PLAYER STATS</span></div>
+        <div class="stats-grid">
+          <article class="stat-card yellow-card"><div class="stat-icon">🏆</div><div class="stat-label">CURRENT TROPHIES</div><div class="stat-value" id="stat-trophies">—</div></article>
+          <article class="stat-card orange-card"><div class="stat-icon">🥇</div><div class="stat-label">HIGHEST TROPHIES</div><div class="stat-value" id="stat-highest">—</div></article>
+          <article class="stat-card blue-card"><div class="stat-icon">🎮</div><div class="stat-label">BRAWLERS OWNED</div><div class="stat-value" id="stat-owned">—</div></article>
+          <article class="stat-card green-card"><div class="stat-icon">⚔️</div><div class="stat-label">TOTAL WINS*</div><div class="stat-value" id="stat-wins">—</div></article>
+        </div>
+        <p class="stats-note">* Total wins combines the 3v3, Solo and Duo victory counters provided by Supercell. Other modes may not be counted separately.</p>
+        <div class="section-title"><div><p class="eyebrow">A LITTLE EXTRA</p><h2>YOUR <span>HIGHLIGHTS</span></h2></div></div>
+        <div class="highlights-grid">
+          <article class="feature-card top-brawler-card"><div class="feature-copy"><p class="eyebrow dark-eyebrow">🏅 YOUR TROPHY LEADER</p><h3>TOP BRAWLER</h3><div class="feature-name" id="top-brawler-name">—</div><p class="feature-stat" id="top-brawler-trophies">Highest current trophies</p><a class="small-button" href="#brawlers">EXPLORE BRAWLERS →</a></div><div class="feature-art" id="top-brawler-art">★</div></article>
+          <article class="feature-card mode-card"><div class="feature-copy"><p class="eyebrow dark-eyebrow">🎯 FROM YOUR TRACKED MATCHES</p><h3>FAVORITE MODE</h3><div class="feature-name" id="favorite-mode-name">Not enough data</div><p class="feature-stat" id="favorite-mode-count">Play more to discover your favorite!</p><a class="small-button" href="#insights">VIEW INSIGHTS →</a></div><div class="feature-art" id="favorite-mode-art">🎯</div></article>
+        </div>
+      </section>
+
+      <section class="page" id="page-brawlers" aria-labelledby="brawlers-title">
+        <div class="page-heading"><div><p class="eyebrow">YOUR PERSONAL ROSTER</p><h1 id="brawlers-title">YOUR <span>BRAWLERS</span></h1><p class="page-subtitle">Meet the stars of your collection.</p></div><span class="pill" id="brawler-total-pill">0 OWNED</span></div>
+        <div class="filterbar"><label class="search-field"><span>⌕</span><input id="brawler-search" placeholder="Search a Brawler..." autocomplete="off"></label><label class="select-wrap"><span>Sort by</span><select id="brawler-sort"><option value="trophies">Most Trophies</option><option value="highest">Highest Record</option><option value="power">Power Level</option><option value="name">Name A–Z</option></select></label></div>
+        <div class="brawler-grid" id="brawlers-grid"></div><div class="empty-state" id="brawler-empty" hidden>No Brawlers match your search.</div>
+      </section>
+
+      <section class="page" id="page-battles" aria-labelledby="battles-title">
+        <div class="page-heading"><div><p class="eyebrow">YOUR TIME IN THE ARENA</p><h1 id="battles-title">BATTLE <span>HISTORY</span></h1><p class="page-subtitle">Recent matches saved by your tracker.</p></div><span class="pill" id="battles-total-pill">0 TRACKED</span></div>
+        <div class="filterbar"><label class="select-wrap"><span>Result</span><select id="battle-result"><option value="all">All Results</option><option value="victory">Victories</option><option value="defeat">Defeats</option><option value="unknown">Other / Unknown</option></select></label><label class="select-wrap"><span>Game Mode</span><select id="battle-mode"><option value="all">All Modes</option></select></label><label class="select-wrap"><span>Brawler</span><select id="battle-brawler"><option value="all">All Brawlers</option></select></label></div>
+        <div class="battle-list" id="battles-list"></div><button id="battles-show-more" class="button navy-button load-more" hidden>SHOW MORE ↓</button><div class="empty-state" id="battles-empty" hidden>No matches found. Check your filters, or play a few games and refresh!</div>
+        <p class="small-footnote">The official API only exposes about 25 recent matches.</p>
+      </section>
+
+      <section class="page" id="page-insights" aria-labelledby="insights-title">
+        <div class="page-heading"><div><p class="eyebrow">GO BEYOND THE SCORE</p><h1 id="insights-title">YOUR <span>INSIGHTS</span></h1><p class="page-subtitle">Performance based on matches saved by your tracker.</p></div><span class="pill" id="insights-total-pill">0 TRACKED</span></div>
+        <div class="insight-quick-grid"><div class="insight-counter"><span>📋 DECIDED MATCHES</span><strong id="insight-decided">—</strong><small>Wins and losses from tracked matches</small></div><div class="insight-counter"><span>🎯 TRACKED WIN RATE</span><strong id="insight-winrate">—</strong><small>Excludes results without a win or loss</small></div><div class="insight-counter"><span>🥊 MOST PLAYED BRAWLER</span><strong id="insight-most-brawler">—</strong><small id="insight-most-brawler-sub">From saved battles</small></div><div class="insight-counter"><span>🎮 MOST PLAYED MODE</span><strong id="insight-most-mode">—</strong><small id="insight-most-mode-sub">From saved battles</small></div></div>
+        <div class="insights-panels"><article class="panel"><div class="panel-title"><p class="eyebrow dark-eyebrow">THE SCORE</p><h3>MATCH RESULTS</h3></div><div id="result-chart"></div></article><article class="panel"><div class="panel-title"><p class="eyebrow dark-eyebrow">YOUR PLAY STYLE</p><h3>MOST PLAYED MODES</h3></div><div id="mode-chart"></div></article><article class="panel wide-panel"><div class="panel-title"><p class="eyebrow dark-eyebrow">YOUR JOURNEY</p><h3>TROPHY PROGRESS</h3></div><div id="trophy-chart"></div></article><article class="panel wide-panel"><div class="panel-title"><p class="eyebrow dark-eyebrow">YOUR TOP PICKS</p><h3>MOST PLAYED BRAWLERS</h3></div><div id="brawler-chart"></div></article></div>
+        <p class="small-footnote">Insights reflect only collected matches and profile check-ins. Keep this server running and refresh regularly to build a longer history. Results for solo placement-based modes are not treated as standard wins or losses.</p>
+      </section>
+    </div>
+  </main>
+  <dialog id="detail-dialog" class="detail-dialog"><button class="dialog-close" id="close-dialog" aria-label="Close details">✕</button><div id="dialog-content"></div></dialog>
+  <footer>Lisa-made Brawl Stars statistics tool hihiha</footer>
+</body>
+</html>

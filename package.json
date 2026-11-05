@@ -1,0 +1,16 @@
+{
+  "name": "brawlstats-v2",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Personal Brawl Stars analytics dashboard",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "check": "node --check server.js && node --check public/app.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2"
+  },
+  "engines": { "node": ">=20" }
+}
