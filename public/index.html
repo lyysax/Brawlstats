@@ -16,7 +16,7 @@
   <div class="background-orbs" aria-hidden="true"></div>
   <header class="topbar">
     <div class="topbar-inner">
-      <a class="brand" href="#overview" aria-label="BrawlStats home"><img class="brand-icon" src="/brawlstats-icon.png" alt="" aria-hidden="true"><span>BRAWL<span class="yellow-text">STATS</span></span></a>
+      <a class="brand" href="#overview" aria-label="BrawlStats home"><span class="brand-star">★</span><span>BRAWL<span class="yellow-text">STATS</span></span></a>
       <nav class="tabs" aria-label="Main navigation">
         <a class="tab active" data-page="overview" href="#overview">⌂ <span>Overview</span></a>
         <a class="tab" data-page="brawlers" href="#brawlers">★ <span>Brawlers</span></a>
@@ -73,10 +73,10 @@
       </section>
 
       <section class="page" id="page-battles" aria-labelledby="battles-title">
-        <div class="page-heading"><div><p class="eyebrow">YOUR TIME IN THE ARENA</p><h1 id="battles-title">BATTLE <span>HISTORY</span></h1><p class="page-subtitle">Recent matches saved by your tracker.</p></div><span class="pill" id="battles-total-pill">0 TRACKED</span></div>
-        <div class="filterbar"><label class="select-wrap"><span>Result</span><select id="battle-result"><option value="all">All Results</option><option value="victory">Victories</option><option value="defeat">Defeats</option><option value="unknown">Other / Unknown</option></select></label><label class="select-wrap"><span>Game Mode</span><select id="battle-mode"><option value="all">All Modes</option></select></label><label class="select-wrap"><span>Brawler</span><select id="battle-brawler"><option value="all">All Brawlers</option></select></label></div>
+        <div class="page-heading"><div><p class="eyebrow">YOUR TIME IN THE ARENA</p><h1 id="battles-title">BATTLE <span>HISTORY</span></h1><p class="page-subtitle">Recent matches collected in this browser. New visitors see the latest available matches.</p></div><span class="pill" id="battles-total-pill">0 TRACKED</span></div>
+        <div class="filterbar"><label class="select-wrap"><span>Result</span><select id="battle-result"><option value="all">All Results</option><option value="victory">Victories</option><option value="defeat">Defeats</option><option value="unknown">Other / Unknown</option></select></label><label class="select-wrap"><span>Game Mode</span><select id="battle-mode"><option value="all">All Modes</option></select></label><label class="select-wrap"><span>Brawler</span><select id="battle-brawler"><option value="all">All Brawlers</option></select></label><button class="button navy-button export-button" id="export-battles">↓ EXPORT CSV</button></div>
         <div class="battle-list" id="battles-list"></div><button id="battles-show-more" class="button navy-button load-more" hidden>SHOW MORE ↓</button><div class="empty-state" id="battles-empty" hidden>No matches found. Check your filters, or play a few games and refresh!</div>
-        <p class="small-footnote">The official API only exposes about 25 recent matches.</p>
+        <p class="small-footnote">Green = trophies gained (Victory); red = trophies lost (Defeat). If no trophy change is provided, the API result is used. Results are saved locally whenever you refresh; the official API only exposes about 25 recent matches.</p>
       </section>
 
       <section class="page" id="page-insights" aria-labelledby="insights-title">
@@ -88,6 +88,6 @@
     </div>
   </main>
   <dialog id="detail-dialog" class="detail-dialog"><button class="dialog-close" id="close-dialog" aria-label="Close details">✕</button><div id="dialog-content"></div></dialog>
-  <footer>Lisa-made Brawl Stars statistics tool hihiha</footer>
+  <footer>Fan-made Brawl Stars statistics tool. Not affiliated with or endorsed by Supercell. Game images courtesy of community asset providers.</footer>
 </body>
 </html>

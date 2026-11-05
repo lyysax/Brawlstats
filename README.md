@@ -1,56 +1,47 @@
-# BrawlStats V2 ⭐
+# BrawlStats Public — Vercel-ready v3
 
-An English, mobile-friendly fan-made Brawl Stars stats dashboard. Four screens: Overview, Brawlers, Battles, and Insights.
+A publicly searchable Brawl Stars dashboard (Overview, Brawlers, Battles, Insights). **The interface is in English.** No account needed: visitors enter their public player tag.
 
-## Requirements
-- Node.js 20 or newer
-- A free Supercell developer API key from https://developer.brawlstars.com/
-- Your current **public IPv4 address** registered on that key
+## 1 — Create a NEW Supercell API key for the proxy
 
-## Installation
-1. Extract this ZIP to a new folder.
-2. Copy the `.env` file from your **existing BrawlStats project** to this folder. Alternatively copy `.env.example` to `.env` and paste your own key.
-3. In VS Code, open this folder and run:
+1. Visit https://developer.brawlstars.com and create a second key.
+2. Allowlist **45.79.218.79**, the static RoyaleAPI proxy IP documented at https://docs.royaleapi.com/proxy . Do **not** use your home IP for this key.
+3. Put the new API token in `.env` locally and in Vercel's Environment Variables as `BRAWL_API_KEY`. **Never commit `.env`.**
 
-   ```powershell
-   npm install
-   npm start
-   ```
+**Privacy / third-party warning:** The Brawl Stars API requires an allowlisted egress IP. This project uses the independent RoyaleAPI proxy (`https://bsproxy.royaleapi.dev`) to reach the official API. The proxy receives the developer token. This is not an official Supercell service and its future availability is not guaranteed. Use a dedicated key and revoke it if you stop trusting the proxy. Vercel's own outbound IPs are dynamic on the free plan.
 
-4. Open http://localhost:3000 and enter your player tag **with or without the `#`**.
+## 2 — Local test
 
-If you already have a server on port 3000, stop it using Ctrl+C first.
+Requires Node.js 20+.
 
-**Never share or commit `.env`.**
+```sh
+npm install
+cp .env.example .env  # or copy manually on Windows
+# set BRAWL_API_KEY in .env
+npm start
+```
 
-## Pages
-- **Overview** — current trophies, highest trophies, owned Brawlers, total wins (sum of 3v3, solo and duo win counters), top Brawler and favorite *tracked* mode.
-- **Brawlers** — character art, collection, filters, and per-Brawler details.
-- **Battles** — saved battle log, filters and CSV export. Click a match for details.
-- **Insights** — only explicit win/loss results contribute to the win-rate. Placement-based modes display rank separately. Favorite mode and Brawler use *tracked* matches. Trophy progression comes from saved profile check-ins.
+Open http://localhost:3000 and search a tag, such as `#82UJL90C` (the site will strip `#`).
 
-## Data and images
-Live profile and battle log: official Supercell API (`api.brawlstars.com`). The key stays on your local Node.js server. Images and catalog metadata: community BrawlAPI (`api.brawlapi.com` and `cdn.brawlify.com`), which are optional: the site still works without them.
+## 3 — Publish to Vercel
 
-## Important limitations
-- Total Wins = 3v3Victories + soloVictories + duoVictories where those counters are provided. This is **not guaranteed to cover every historical special mode**.
-- No complete lifetime battle log is available. Saved battle data grows only when the local server is running and the dashboard is refreshed or opened. The dashboard does not continuously poll in the background.
-- A trophy graph requires at least two snapshots, usually created 30 minutes apart or after a trophy change.
-- Battle logs can be delayed. Some modes lack explicit win/loss or player data. This app does not fabricate them.
-- Local JSON is stored per tag in `data/TAG.json`, with up to 1,500 battles and 1,500 snapshots per player. To migrate old stored history, copy compatible data files from the old project, if desired. Old versions may have a different format.
+1. Create a **new, public or private GitHub repository** and upload this folder's contents, excluding `.env` and `node_modules`.
+2. In https://vercel.com choose **Add New → Project → Import Git Repository**.
+3. Choose Framework Preset **Other**, Root Directory repository root, and leave Build Command and Output Directory unset/default. Public static files are in `public/`, functions are in `api/`.
+4. In Project → Settings → Environment Variables, add `BRAWL_API_KEY` with the **new proxy-whitelisted** token for Production (and Preview if desired). Redeploy after adding/changing env vars.
+5. Test your URL: search for multiple different player tags and inspect `/api/dashboard/82UJL90C` on your deployed domain if necessary.
 
-## API troubleshooting
-- **403:** Confirm key is valid and your current public IPv4 is allowed in the Supercell developer portal.
-- **404:** Check your player tag.
-- **Missing API key:** Check `.env` next to `server.js` and restart Node.
-- **EADDRINUSE:** Stop the older running server.
-- **No portraits:** The optional community image source may be unavailable.
+## Data model and limitations
 
-## Security and attribution
-This is a local personal fan project, not affiliated with or endorsed by Supercell. Respect Supercell's Fan Content Policy and asset providers' terms if deploying publicly. Keep your API key server-side; never publish the `.env` or `data` folder. The local server binds to `127.0.0.1` by default.
+- Official profile and up to ~25 latest battles are fetched anew when someone enters a tag.
+- The app **does not have a persistent shared server-side database**. It saves up to 300 deduplicated matches and 300 trophy checkpoints **per player in each visitor's browser**, using localStorage. Clearing browser storage, changing browser/device or using a private window loses that history. The server cannot collect new matches when nobody is viewing the site.
+- Insights only cover stored/retrieved matches, not a player's full career. Favorite Mode is the most played in those records.
+- **Win/Loss convention for this project:** Positive trophy change = Victory, negative = Defeat; if no trophy change exists, use the explicit API result. Neutral results are excluded from win rate. This is a simplified classification and does not represent official Showdown wins.
+- Official overall total win counters sum 3v3, solo and duo victories; not necessarily all possible modes.
+- Uses the community BrawlAPI for artwork; icons can fail gracefully.
+- API access is limited by upstream quotas; serverless in-memory caching lasts only during warm instances. A popular public site should add proper distributed rate limiting and persistent caching.
+- This is an unofficial fan project and is not endorsed by Supercell.
 
-## Longer battle history and colors
+## Moving from your previous version
 
-The official API returns only about 25 recent matches per request. Every dashboard refresh merges unseen matches into `data/<TAG>.json` (up to 1,500 in this version). The site also refreshes every five minutes while its tab is open and visible; close it or stop the server and collection stops. If you play more than 25 matches between refreshes, the older unseen matches cannot be recovered. The battle list displays 50 at a time with **Show More**, and insights use all locally saved matches. Back up the `data` folder when replacing versions.
-
-Green means an explicit victory in team modes, or a positive trophy change for a Showdown placement; red means an explicit defeat or a negative Showdown trophy change. Neutral Showdown results remain yellow. Placement colors **do not** change tracked win-rate calculations.
+Do not upload the old local `.env` to GitHub. The old `data/*.json` directory is not automatically migrated because history is now stored by browser. You can keep the old project as backup.

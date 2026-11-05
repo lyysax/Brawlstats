@@ -40,5 +40,3 @@
 .battle-v2-card-value{display:block;font:900 22px/1.1 'Barlow Condensed',Impact,sans-serif;overflow-wrap:anywhere}
 .battle-v2-note{font-weight:800;color:#526083;font-size:12px;margin:19px 0 0}
 @media(max-width:520px){.detail-dialog:has(.battle-detail-v2){max-height:calc(100dvh - 28px);overflow-y:auto}.battle-v2-banner{padding:20px 15px 17px}.battle-v2-hero{gap:11px}.battle-v2-art{width:78px;height:78px;border-radius:13px}.battle-v2-title h2{font-size:37px}.battle-v2-title p{font-size:12px}.battle-v2-content{padding:17px 14px 24px}.battle-v2-cards{gap:9px}.battle-v2-card{padding:10px 8px;gap:6px;min-height:76px}.battle-v2-card-icon{font-size:19px}.battle-v2-card-value{font-size:18px}.battle-v2-eyebrow{font-size:11px}}
-.brand-icon{display:block;width:45px;height:45px;object-fit:cover;border-radius:12px;box-shadow:3px 4px 0 #07153c}
-@media(max-width:680px){.brand-icon{width:39px;height:39px}}

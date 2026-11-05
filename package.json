@@ -1,16 +1,18 @@
 {
-  "name": "brawlstats-v2",
-  "version": "2.0.0",
+  "name": "brawlstats-public-vercel",
+  "version": "3.0.0",
   "private": true,
-  "description": "Personal Brawl Stars analytics dashboard",
+  "description": "Public Brawl Stars stats explorer for Vercel",
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "check": "node --check server.js && node --check public/app.js"
+    "check": "node --check server.js && node --check api/dashboard.js && node --check api/assets.js && node --check public/app.js"
+  },
+  "engines": {
+    "node": ">=20"
   },
   "dependencies": {
     "dotenv": "^16.6.1",
     "express": "^4.21.2"
-  },
-  "engines": { "node": ">=20" }
+  }
 }

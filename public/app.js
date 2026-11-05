@@ -34,13 +34,56 @@ function enriched(){return state.battles.map(item=>({...item,_mode:battleMode(it
 function frequencies(list,fn){const map=new Map();list.forEach(i=>{const key=fn(i);if(key)map.set(key,(map.get(key)||0)+1);});return [...map.entries()].sort((a,b)=>b[1]-a[1]);}
 async function api(path){const r=await fetch(path,{cache:'no-store'});const payload=await r.json().catch(()=>({}));if(!r.ok)throw Error(payload.error||`Request failed (${r.status})`);return payload;}
 async function loadAssets(){try{state.assets=await api('/api/assets');}catch(e){console.warn('Optional community images unavailable:',e.message);}}
+
+// Vercel functions do not provide persistent storage. Keep each visitor's history
+// locally in their own browser. No Supercell token is ever stored in the browser.
+const HISTORY_LIMIT = 300;
+function historyKey(tag) { return `brawlstats:history:v3:${tag}`; }
+function getStoredHistory(tag) {
+  try {
+    const h = JSON.parse(localStorage.getItem(historyKey(tag)) || '{}');
+    return {battles: Array.isArray(h.battles) ? h.battles : [], snapshots: Array.isArray(h.snapshots) ? h.snapshots : []};
+  } catch { return {battles: [], snapshots: []}; }
+}
+function battleSignature(item) {
+  const b = item.battle || {};
+  const participants = [...(b.players || []), ...(b.teams || []).flat()]
+    .map(p => p.tag || p.name || '').sort().join('|');
+  return [item.battleTime || '', item.event?.id || '', b.mode || '', b.type || '', participants].join(':');
+}
+function saveLocalHistory(tag, player, items) {
+  const history = getStoredHistory(tag);
+  const known = new Set(history.battles.map(battleSignature));
+  for (const item of items) {
+    if (!item?.battleTime) continue;
+    const key = battleSignature(item);
+    if (!known.has(key)) { known.add(key); history.battles.push(item); }
+  }
+  history.battles.sort((a,b) => (b.battleTime || '').localeCompare(a.battleTime || ''));
+  history.battles = history.battles.slice(0, HISTORY_LIMIT);
+  const now = new Date().toISOString();
+  const last = history.snapshots.at(-1);
+  if (!last || last.trophies !== player.trophies || Date.now() - Date.parse(last.at) > 30 * 60 * 1000) {
+    history.snapshots.push({at: now, trophies: player.trophies, highestTrophies: player.highestTrophies});
+    history.snapshots = history.snapshots.slice(-300);
+  }
+  // Browsers may restrict storage. If full, remove older battles and try again.
+  for (const max of [HISTORY_LIMIT, 150, 75, 25]) {
+    try {
+      localStorage.setItem(historyKey(tag), JSON.stringify({battles: history.battles.slice(0,max), snapshots: history.snapshots}));
+      return {battles: history.battles.slice(0,max), snapshots: history.snapshots};
+    } catch { /* storage disabled or full */ }
+  }
+  return {battles: items, snapshots: history.snapshots};
+}
+
 async function loadPlayer(tag, refresh=false){if(state.loading)return;state.loading=true;const button=$('find-button'),refreshBtn=$('refresh-button');button.disabled=true;refreshBtn.disabled=true;button.textContent='LOADING...';refreshBtn.textContent='↻ LOADING...';errorSearch('');setMessage('');try{
   const normalized=normalize(tag);
   const data=await api(`/api/dashboard/${encodeURIComponent(normalized)}`);
-  state.tag=normalized;state.player=data.player;state.battles=data.battles||[];state.snapshots=data.snapshots||[];state.lastUpdated=data.updatedAt;
-  localStorage.setItem('brawlstats:lastTag',normalized);
-  renderAll();showDashboard();if(data.battleError)setMessage(`Your profile loaded, but the current battle log could not be updated: ${data.battleError}. Previously saved matches are still shown.`);
-  else if(refresh)setMessage('Your stats are up to date!');
+  state.tag=normalized;state.player=data.player;const saved=saveLocalHistory(normalized,data.player,data.battles||[]);state.battles=saved.battles;state.snapshots=saved.snapshots;state.lastUpdated=data.updatedAt;
+  try { localStorage.setItem('brawlstats:lastTag',normalized); } catch {}
+  renderAll();showDashboard();if(data.battleError)setMessage(`Your profile loaded, but the current battle log could not be updated: ${data.battleError}. Previously saved matches in this browser are still shown.`);
+  else if(refresh)setMessage('Your stats are up to date! Match history is saved in this browser.');
 }catch(e){if(state.player&&refresh)setMessage(e.message);else{showSearch();errorSearch(e.message);}}
 finally{state.loading=false;button.disabled=false;refreshBtn.disabled=false;button.textContent="LET'S BRAWL →";refreshBtn.textContent='↻ REFRESH';}}
 function renderProfile(){const p=state.player;$('player-name').textContent=p.name||'Player';$('player-tag').textContent=p.tag||`#${state.tag}`;$('player-club').textContent=p.club?.name||'No club';$('updated-label').textContent=`UPDATED ${new Date(state.lastUpdated).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}`;const icon=state.assets.icons[String(p.icon?.id)];const el=$('profile-icon');const url=icon?.imageUrl;if(url&&/^https:\/\/cdn\.brawlify\.com\//.test(url)){el.src=url;el.hidden=false;$('profile-fallback').hidden=true;el.onerror=()=>{el.hidden=true;$('profile-fallback').hidden=false;};}else{el.hidden=true;$('profile-fallback').hidden=false;}}
@@ -52,7 +95,7 @@ $('brawlers-grid').innerHTML=filtered.map(b=>{const color=brawlerAsset(b.id)?.ra
 function populateFilters(){const records=enriched();const modeVal=$('battle-mode').value,brawlerVal=$('battle-brawler').value;const modes=[...new Set(records.map(b=>b._mode))].sort();const brawlers=[...new Set(records.map(b=>b._brawler?.name).filter(Boolean))].sort();$('battle-mode').innerHTML='<option value="all">All Modes</option>'+modes.map(m=>`<option value="${safe(m)}">${safe(readableMode(m))}</option>`).join('');$('battle-brawler').innerHTML='<option value="all">All Brawlers</option>'+brawlers.map(m=>`<option value="${safe(m)}">${safe(m)}</option>`).join('');$('battle-mode').value=modes.includes(modeVal)?modeVal:'all';$('battle-brawler').value=brawlers.includes(brawlerVal)?brawlerVal:'all';}
 function currentFilteredBattles(){return enriched().filter(b=>{const result=$('battle-result').value,mode=$('battle-mode').value,brawler=$('battle-brawler').value;return (result==='all'||result===b._outcome.type)&&(mode==='all'||mode===b._mode)&&(brawler==='all'||brawler===b._brawler?.name);});}
 function renderBattles(){$('battles-total-pill').textContent=`${state.battles.length} TRACKED`;const filtered=currentFilteredBattles();const items=filtered.slice(0,state.visibleBattles);$('battles-show-more').hidden=filtered.length<=items.length;$('battles-show-more').textContent=`SHOW MORE (${number(filtered.length-items.length)} LEFT) ↓`;$('battles-empty').hidden=items.length>0;$('battles-list').innerHTML=items.map((item,index)=>{const result=item._outcome;const b=item.battle||{};const trophy=typeof b.trophyChange==='number'?`${b.trophyChange>0?'+':''}${b.trophyChange} 🏆`:'';const portrait=brawlerImage(item._brawler?.id);return `<button class="battle-row" data-battle="${index}" style="--stripe:${result.color}"><div class="battle-icon">${img(portrait,'',item._brawler?.name||'Brawler')||'⚔️'}</div><div class="battle-main"><h3>${safe(readableMode(item._mode))}</h3><p>${safe(item.event?.map||'Unknown map')} · ${safe(item._brawler?.name||'Brawler unavailable')} · ${safe(fmtDate(item.battleTime))}</p></div><div class="battle-result"><strong>${safe(result.label)}</strong><p>${safe(trophy)}</p></div></button>`;}).join('');}
-function chartBars(items, limit=6){if(!items.length)return '<div class="chart-empty">Not enough data yet. Play some matches and refresh!</div>';const max=Math.max(...items.map(i=>i[1]),1);return `<div class="bar-list">${items.slice(0,limit).map(([name,count])=>`<div><div class="bar-label"><span>${safe(readableMode(name))}</span><span>${number(count)} matches</span></div><div class="bar-track"><div class="bar-fill" style="width:${Math.round(count/max*100)}%"></div></div></div>`).join('')}</div>`;}
+function chartBars(items, limit=6){if(!items.length)return '<div class="chart-empty">Not enough data yet. Play some matches and refresh! Your extra history is stored in this browser.</div>';const max=Math.max(...items.map(i=>i[1]),1);return `<div class="bar-list">${items.slice(0,limit).map(([name,count])=>`<div><div class="bar-label"><span>${safe(readableMode(name))}</span><span>${number(count)} matches</span></div><div class="bar-track"><div class="bar-fill" style="width:${Math.round(count/max*100)}%"></div></div></div>`).join('')}</div>`;}
 function lineChart(snapshots){if(snapshots.length<2)return `<div class="chart-empty">Your trophy chart will appear after at least two profile check-ins.<br>Come back after playing!</div>`;const values=snapshots.map(s=>Number(s.trophies)||0),low=Math.min(...values),high=Math.max(...values),range=Math.max(1,high-low),w=850,h=220,pad=35;const pts=values.map((v,i)=>[pad+i*(w-pad*2)/(values.length-1),h-pad-(v-low)/range*(h-pad*2)]);const path=pts.map((p,i)=>`${i?'L':'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');return `<svg class="chart-svg" viewBox="0 0 ${w} ${h}" role="img" aria-label="Trophy progression from ${number(values[0])} to ${number(values.at(-1))}"><line x1="${pad}" x2="${w-pad}" y1="${h-pad}" y2="${h-pad}" stroke="#9eafd2" stroke-width="2"/><line x1="${pad}" x2="${w-pad}" y1="${pad}" y2="${pad}" stroke="#e5e8f0" stroke-width="2"/><path d="${path}" fill="none" stroke="#237cea" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>${pts.map(([x,y])=>`<circle cx="${x}" cy="${y}" r="${values.length>45?2:4}" fill="#ffcb25" stroke="#123174" stroke-width="2"/>`).join('')}<text x="${pad}" y="${pad-10}" font-size="16" font-weight="bold" fill="#344b7e">${number(high)}</text><text x="${pad}" y="${h-7}" font-size="16" font-weight="bold" fill="#344b7e">${number(low)}</text></svg><div class="axis-caption">${number(values[0])} → ${number(values.at(-1))} trophies · ${snapshots.length} saved check-ins</div>`;}
 function renderInsights(){const records=enriched(),decided=records.filter(i=>['victory','defeat'].includes(i._outcome.type)),wins=decided.filter(i=>i._outcome.type==='victory').length,losses=decided.length-wins,rate=decided.length?Math.round(wins/decided.length*100):null;const {modes,brawlers}=favorites();$('insights-total-pill').textContent=`${records.length} TRACKED`;$('insight-decided').textContent=number(decided.length);$('insight-winrate').textContent=rate===null?'—':`${rate}%`;$('insight-most-mode').textContent=modes[0]?readableMode(modes[0][0]):'—';$('insight-most-mode-sub').textContent=modes[0]?`${number(modes[0][1])} matches played`:'From saved battles';$('insight-most-brawler').textContent=brawlers[0]?.[0]||'—';$('insight-most-brawler-sub').textContent=brawlers[0]?`${number(brawlers[0][1])} matches played`:'From saved battles';$('result-chart').innerHTML=rate===null?'<div class="chart-empty">No wins or losses recorded yet.</div>':`<div class="donut-wrap"><div class="donut" style="--win:${rate}%"><div class="donut-hole">${rate}%</div></div><div class="legend"><div><b class="win"></b>${number(wins)} victories</div><div><b class="lose"></b>${number(losses)} defeats</div><div style="font-size:12px;color:#697792">${records.length-decided.length} other results excluded</div></div></div>`;$('mode-chart').innerHTML=chartBars(modes);$('brawler-chart').innerHTML=chartBars(brawlers,8);$('trophy-chart').innerHTML=lineChart(state.snapshots);}
 function renderAll(){renderProfile();renderOverview();renderBrawlers();populateFilters();renderBattles();renderInsights();}
@@ -98,9 +141,10 @@ function showBattle(index){
   </section>`);
 }
 
+function csvDownload(){const rows=[['Date','Mode','Map','Result','Brawler','Rank','Trophy Change']];currentFilteredBattles().forEach(item=>rows.push([item.battleTime||'',item._mode,item.event?.map||'',item._outcome.label,item._brawler?.name||'',item.battle?.rank??'',item.battle?.trophyChange??'']));const csv=rows.map(row=>row.map(v=>`"${String(v??'').replaceAll('"','""')}"`).join(',')).join('\r\n');const url=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download=`brawlstats-${state.tag}-battles.csv`;a.click();URL.revokeObjectURL(url);}
 $('battles-show-more').addEventListener('click',()=>{state.visibleBattles+=50;renderBattles();});
-$('player-form').addEventListener('submit',e=>{e.preventDefault();loadPlayer($('tag-input').value);});$('open-search').addEventListener('click',showSearch);$('refresh-button').addEventListener('click',()=>state.tag&&loadPlayer(state.tag,true));$('brawler-search').addEventListener('input',renderBrawlers);$('brawler-sort').addEventListener('change',renderBrawlers);['battle-result','battle-mode','battle-brawler'].forEach(id=>$(id).addEventListener('change',renderBattles));$('brawlers-grid').addEventListener('click',e=>{const card=e.target.closest('[data-brawler]');if(card)showBrawler(card.dataset.brawler);});$('battles-list').addEventListener('click',e=>{const row=e.target.closest('[data-battle]');if(row)showBattle(Number(row.dataset.battle));});$('close-dialog').addEventListener('click',()=>$('detail-dialog').close());$('detail-dialog').addEventListener('click',e=>{if(e.target===$('detail-dialog'))$('detail-dialog').close();});
-(async()=>{goPage();await loadAssets();const remembered=localStorage.getItem('brawlstats:lastTag');if(remembered){$('tag-input').value=remembered;await loadPlayer(remembered);}else showSearch();})();
+$('player-form').addEventListener('submit',e=>{e.preventDefault();loadPlayer($('tag-input').value);});$('open-search').addEventListener('click',showSearch);$('refresh-button').addEventListener('click',()=>state.tag&&loadPlayer(state.tag,true));$('brawler-search').addEventListener('input',renderBrawlers);$('brawler-sort').addEventListener('change',renderBrawlers);['battle-result','battle-mode','battle-brawler'].forEach(id=>$(id).addEventListener('change',renderBattles));$('brawlers-grid').addEventListener('click',e=>{const card=e.target.closest('[data-brawler]');if(card)showBrawler(card.dataset.brawler);});$('battles-list').addEventListener('click',e=>{const row=e.target.closest('[data-battle]');if(row)showBattle(Number(row.dataset.battle));});$('export-battles').addEventListener('click',csvDownload);$('close-dialog').addEventListener('click',()=>$('detail-dialog').close());$('detail-dialog').addEventListener('click',e=>{if(e.target===$('detail-dialog'))$('detail-dialog').close();});
+(async()=>{goPage();await loadAssets();let remembered=null;try{remembered=localStorage.getItem('brawlstats:lastTag');}catch{}if(remembered){$('tag-input').value=remembered;await loadPlayer(remembered);}else showSearch();})();
 
 // Poll while the page is open: retain earlier battles before they leave the API's 25-match window.
 setInterval(()=>{if(state.tag&&!state.loading&&!document.hidden)loadPlayer(state.tag,true);},5*60*1000);

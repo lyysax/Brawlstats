@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/api/dashboard/:tag",
+      "destination": "/api/dashboard?tag=:tag"
+    }
+  ]
+}
