@@ -41,3 +41,60 @@
 .battle-v2-note{font-weight:800;color:#526083;font-size:12px;margin:19px 0 0}
 @media(max-width:520px){.detail-dialog:has(.battle-detail-v2){max-height:calc(100dvh - 28px);overflow-y:auto}.battle-v2-banner{padding:20px 15px 17px}.battle-v2-hero{gap:11px}.battle-v2-art{width:78px;height:78px;border-radius:13px}.battle-v2-title h2{font-size:37px}.battle-v2-title p{font-size:12px}.battle-v2-content{padding:17px 14px 24px}.battle-v2-cards{gap:9px}.battle-v2-card{padding:10px 8px;gap:6px;min-height:76px}.battle-v2-card-icon{font-size:19px}.battle-v2-card-value{font-size:18px}.battle-v2-eyebrow{font-size:11px}}
 .brand-icon{width:45px;height:45px;object-fit:cover;border-radius:12px;box-shadow:3px 4px 0 #07153c;transform:rotate(-9deg)}
+
+@media(max-width:680px){
+  html,body{overflow-x:hidden}
+  .shell,.topbar-inner,.page,.player-banner,.page-heading,.filterbar{min-width:0}
+  .topbar-inner{gap:8px}
+  .brand-icon{width:38px;height:38px}
+  .tabs{width:100%;min-width:0}
+  .tab{min-width:0;padding:8px 2px}
+  .search-hero:before,.search-hero:after,.sparkle{display:none}
+  .search-hero{padding:34px 16px 38px}
+  .search-hero .eyebrow{font-size:13px;letter-spacing:1.4px}
+  .search-hero h1{font-size:clamp(38px,10vw,52px);line-height:1}
+  .hero-sub{font-size:16px}
+  .player-form{gap:4px;padding:6px}
+  .player-form input{font-size:16px}
+  .page-heading{align-items:flex-start}
+  .page-heading>div{min-width:0}
+  .page-heading h1{font-size:clamp(34px,9vw,43px);overflow-wrap:anywhere}
+  .page-subtitle{font-size:14px}
+  .filterbar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .filterbar>*{min-width:0;width:100%}
+  .filterbar .search-field{grid-column:1/-1}
+  .select-wrap{padding:0 9px;gap:6px}
+  .select-wrap select{min-width:0;max-width:100%;font-size:13px}
+  .search-field input{min-width:0;width:100%}
+  .feature-copy{max-width:72%}
+  .feature-art{width:36%;font-size:clamp(70px,19vw,110px)}
+  .battle-main p{overflow-wrap:anywhere}
+  .battle-result{min-width:64px}
+  .battle-v2-banner:before{display:none}
+}
+
+@media(max-width:390px){
+  .shell{padding-right:10px;padding-left:10px}
+  .topbar-inner{padding-right:9px;padding-left:9px}
+  .brand{font-size:21px;gap:6px}
+  .brand-icon{width:34px;height:34px}
+  .nav-search{padding:7px}
+  .tab{font-size:13px}
+  .tab span{font-size:10px}
+  .search-hero{padding-right:12px;padding-left:12px;border-radius:22px}
+  .player-banner{padding:11px;gap:9px}
+  .player-detail h2{font-size:25px}
+  .stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stat-card{padding:11px}
+  .stat-value{font-size:clamp(27px,8vw,31px)}
+  .stat-label{font-size:10px}
+  .brawler-grid{gap:9px}
+  .battle-row{gap:7px;padding:9px}
+  .battle-result{min-width:56px}
+  .battle-result strong{font-size:15px}
+  .battle-result p{font-size:12px}
+  .feature-card{padding:15px}
+  .feature-copy{max-width:75%}
+  .feature-art{width:32%;font-size:70px}
+  .battle-v2-cards{grid-template-columns:1fr}
+}
